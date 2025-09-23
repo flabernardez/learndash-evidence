@@ -501,14 +501,12 @@ function learndash_evidence_set_access_date_on_meta_update($meta_id, $user_id, $
 add_action('updated_user_meta', 'learndash_evidence_set_access_date_on_meta_update', 10, 4);
 add_action('added_user_meta',   'learndash_evidence_set_access_date_on_meta_update', 10, 4);
 
-// NEW: Hook to fix course access dates when users are enrolled in courses
-function learndash_evidence_fix_course_access_on_enrollment($user_id, $course_id, $access_list, $remove) {
-    if ($remove) return; // Skip if removing access
-
+// Corregir fechas cuando se asigna acceso a cursos
+function learndash_evidence_fix_course_access_on_assignment($user_id, $course_id) {
     $meta_key = 'course_' . $course_id . '_access_from';
     $current = get_user_meta($user_id, $meta_key, true);
 
-    // If the current value is empty, 0, or shows 1970 date
+    // Si el valor actual está vacío, es 0, o muestra fecha de 1970
     if (empty($current) || $current == '0' || $current == 0 || $current == 'false' || $current <= 86400) {
         $user = get_userdata($user_id);
         if ($user) {
@@ -517,7 +515,24 @@ function learndash_evidence_fix_course_access_on_enrollment($user_id, $course_id
         }
     }
 }
-add_action('learndash_update_user_activity', 'learndash_evidence_fix_course_access_on_enrollment', 10, 4);
+
+// Hooks para diferentes formas de asignar cursos
+add_action('ld_added_course_access', 'learndash_evidence_fix_course_access_on_assignment', 10, 2);
+add_action('learndash_user_course_access_changed', 'learndash_evidence_fix_course_access_on_assignment', 10, 2);
+
+// También capturar cuando se completan actividades (inscripciones automáticas)
+function learndash_evidence_fix_on_activity_update($args) {
+    if (!isset($args['user_id']) || !isset($args['course_id'])) return;
+
+    $user_id = $args['user_id'];
+    $course_id = $args['course_id'];
+
+    // Solo procesar si es una actividad relacionada con inscripción
+    if (isset($args['activity_type']) && $args['activity_type'] === 'course') {
+        learndash_evidence_fix_course_access_on_assignment($user_id, $course_id);
+    }
+}
+add_action('learndash_update_user_activity', 'learndash_evidence_fix_on_activity_update', 10, 1);
 
 // NEW: Additional hook for when course access is granted
 function learndash_evidence_on_course_access_granted($user_id, $course_id) {
