@@ -1,0 +1,157 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: LearnDash Evidence\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-06-16 12:48+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.8.0; wp-6.8.1; php-8.3.20\n"
+"X-Domain: learndash-evidence"
+
+#. Description of the plugin
+msgid ""
+"Adds a tracking section in LearnDash to monitor user progress and quiz "
+"scores, prepared for screencapture or print."
+msgstr ""
+
+#: templates/course-report.php:48
+msgid "Attempts"
+msgstr ""
+
+#: templates/course-report.php:61
+msgid "Back to user profile"
+msgstr ""
+
+#: student-list.php:41
+msgid "Completed"
+msgstr ""
+
+#: templates/course-report.php:24
+msgid "completed"
+msgstr ""
+
+#: templates/course-report.php:30
+msgid "Completed Evidences"
+msgstr ""
+
+#: student-list.php:101
+msgid "Course"
+msgstr ""
+
+#: templates/course-report.php:11
+msgid "Course Content"
+msgstr ""
+
+#. Author of the plugin
+msgid "Flavia Bernárdez Rodríguez"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://flabernardez.com"
+msgstr ""
+
+#: student-list.php:99
+msgid "Last Name"
+msgstr ""
+
+#. Name of the plugin
+#: learndash-evidence.php:20 learndash-evidence.php:21
+#: learndash-evidence.php:253
+msgid "LearnDash Evidence"
+msgstr ""
+
+#: student-list.php:98
+msgid "Name"
+msgstr ""
+
+#: learndash-evidence.php:332
+msgid "next lesson"
+msgstr ""
+
+#: learndash-evidence.php:333
+msgid "next quiz"
+msgstr ""
+
+#: learndash-evidence.php:331
+msgid "next topic"
+msgstr ""
+
+#: student-list.php:119
+msgid "No students found."
+msgstr ""
+
+#: student-list.php:41
+msgid "Not completed"
+msgstr ""
+
+#: learndash-evidence.php:215
+msgid "Not passed"
+msgstr ""
+
+#: learndash-evidence.php:218
+msgid "Not taken"
+msgstr ""
+
+#: learndash-evidence.php:215
+msgid "Passed"
+msgstr ""
+
+#: templates/course-report.php:3
+msgid "Print / Save PDF"
+msgstr ""
+
+#: templates/course-report.php:22
+msgid "Progress"
+msgstr ""
+
+#: templates/course-report.php:41
+msgid "Quizzes"
+msgstr ""
+
+#: student-list.php:103
+msgid "Report"
+msgstr ""
+
+#: templates/course-report.php:47
+msgid "Score"
+msgstr ""
+
+#: student-list.php:92
+msgid "Search"
+msgstr ""
+
+#: student-list.php:91
+msgid "Search user..."
+msgstr ""
+
+#: student-list.php:100
+msgid "Start Date"
+msgstr ""
+
+#: student-list.php:102 templates/course-report.php:49
+msgid "Status"
+msgstr ""
+
+#: student-list.php:88
+msgid "Student List in Courses"
+msgstr ""
+
+#: learndash-evidence.php:30 learndash-evidence.php:31
+msgid "Student Tracking"
+msgstr ""
+
+#: templates/course-report.php:46
+msgid "Title"
+msgstr ""
+
+#: student-list.php:115
+msgid "View report"
+msgstr ""
