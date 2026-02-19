@@ -61,9 +61,10 @@ function lde_get_value( $source, $key, $default = null ) {
  * @param int   $course_id     The course ID.
  * @param array $user_quizzes  The raw quiz data from user meta.
  * @return array {
- *     @type int $steps_completed  Number of completed steps (lessons + topics + passed quizzes).
- *     @type int $steps_total      Total number of steps.
- *     @type int $percent          Progress percentage (0-100).
+ *     @type int   $steps_completed  Number of completed steps (lessons + topics + passed quizzes).
+ *     @type int   $steps_total      Total number of steps.
+ *     @type int   $percent          Progress percentage (0-100).
+ *     @type int[] $quiz_ids_ordered Quiz IDs in course structure order (deduplicated).
  * }
  */
 function lde_calculate_real_progress( $user_id, $course_id, $user_quizzes ) {
@@ -103,14 +104,15 @@ function lde_calculate_real_progress( $user_id, $course_id, $user_quizzes ) {
 	if ( empty( $course_quizzes ) ) {
 		$percent = ( $steps_total > 0 ) ? round( ( $steps_completed / $steps_total ) * 100 ) : 0;
 		return array(
-			'steps_completed' => $steps_completed,
-			'steps_total'     => $steps_total,
-			'percent'         => $percent,
+			'steps_completed'  => $steps_completed,
+			'steps_total'      => $steps_total,
+			'percent'          => $percent,
+			'quiz_ids_ordered' => array(),
 		);
 	}
 
-	// Step 3: Deduplicate quiz IDs.
-	$quiz_ids = array();
+	// Step 3: Deduplicate quiz IDs preserving course structure order.
+	$quiz_ids_ordered = array();
 	foreach ( $course_quizzes as $quiz_item ) {
 		$qid = 0;
 		if ( is_array( $quiz_item ) && isset( $quiz_item['post']->ID ) ) {
@@ -118,17 +120,18 @@ function lde_calculate_real_progress( $user_id, $course_id, $user_quizzes ) {
 		} elseif ( is_object( $quiz_item ) && isset( $quiz_item->ID ) ) {
 			$qid = $quiz_item->ID;
 		}
-		if ( $qid > 0 ) {
-			$quiz_ids[ $qid ] = $qid;
+		if ( $qid > 0 && ! in_array( $qid, $quiz_ids_ordered, true ) ) {
+			$quiz_ids_ordered[] = $qid;
 		}
 	}
+	$quiz_ids = array_flip( $quiz_ids_ordered );
 
-	$total_quizzes  = count( $quiz_ids );
+	$total_quizzes  = count( $quiz_ids_ordered );
 	$passed_quizzes = 0;
 
 	// Step 4: Check which quizzes the user has passed.
 	if ( $user_quizzes && is_array( $user_quizzes ) ) {
-		foreach ( $quiz_ids as $quiz_id ) {
+		foreach ( $quiz_ids_ordered as $quiz_id ) {
 			foreach ( $user_quizzes as $attempt ) {
 				if ( intval( $attempt['quiz'] ) === $quiz_id && intval( $attempt['course'] ) === $course_id ) {
 					if ( ! empty( $attempt['pass'] ) ) {
@@ -146,9 +149,10 @@ function lde_calculate_real_progress( $user_id, $course_id, $user_quizzes ) {
 	$percent          = ( $steps_total > 0 ) ? round( ( $steps_completed / $steps_total ) * 100 ) : 0;
 
 	return array(
-		'steps_completed' => $steps_completed,
-		'steps_total'     => $steps_total,
-		'percent'         => $percent,
+		'steps_completed'  => $steps_completed,
+		'steps_total'      => $steps_total,
+		'percent'          => $percent,
+		'quiz_ids_ordered' => $quiz_ids_ordered,
 	);
 }
 
@@ -218,28 +222,57 @@ function lde_render_report() {
 	}
 
 	// Build quiz results table.
+	// For each quiz we find the BEST attempt (passed first, then highest %).
 	$quiz_rows       = '';
 	$quizzes_grouped = array();
 
 	if ( $user_quizzes && is_array( $user_quizzes ) ) {
-		usort( $user_quizzes, function ( $a, $b ) {
-			$time_a = isset( $a['time'] ) ? $a['time'] : 0;
-			$time_b = isset( $b['time'] ) ? $b['time'] : 0;
-			return $time_b <=> $time_a;
-		} );
-
 		foreach ( $user_quizzes as $quiz ) {
 			if ( intval( $quiz['course'] ) !== $course_id ) {
 				continue;
 			}
-			$quiz_id = $quiz['quiz'];
+			$quiz_id = intval( $quiz['quiz'] );
+
 			if ( ! isset( $quizzes_grouped[ $quiz_id ] ) ) {
-				$quizzes_grouped[ $quiz_id ] = $quiz;
+				$quizzes_grouped[ $quiz_id ] = array(
+					'best'    => $quiz,
+					'count'   => 1,
+				);
+			} else {
+				$quizzes_grouped[ $quiz_id ]['count']++;
+				$current_best = $quizzes_grouped[ $quiz_id ]['best'];
+
+				// Prefer passed over not-passed.
+				$new_passed     = ! empty( $quiz['pass'] );
+				$current_passed = ! empty( $current_best['pass'] );
+
+				if ( $new_passed && ! $current_passed ) {
+					$quizzes_grouped[ $quiz_id ]['best'] = $quiz;
+				} elseif ( $new_passed === $current_passed ) {
+					// Same pass status: prefer higher percentage.
+					$new_pct     = isset( $quiz['percentage'] ) ? floatval( $quiz['percentage'] ) : 0;
+					$current_pct = isset( $current_best['percentage'] ) ? floatval( $current_best['percentage'] ) : 0;
+					if ( $new_pct > $current_pct ) {
+						$quizzes_grouped[ $quiz_id ]['best'] = $quiz;
+					}
+				}
 			}
 		}
 	}
 
-	foreach ( $quizzes_grouped as $quiz_id => $quiz ) {
+	// Iterate in course structure order using quiz_ids_ordered from progress calc.
+	$ordered_quiz_ids = isset( $real_progress['quiz_ids_ordered'] ) ? $real_progress['quiz_ids_ordered'] : array_keys( $quizzes_grouped );
+
+	foreach ( $ordered_quiz_ids as $quiz_id ) {
+		if ( ! isset( $quizzes_grouped[ $quiz_id ] ) ) {
+			// Quiz exists in course but user has no attempts: show as "Not taken".
+			$quizzes_grouped[ $quiz_id ] = array(
+				'best'  => array( 'pass' => 0, 'percentage' => 0 ),
+				'count' => 0,
+			);
+		}
+		$group     = $quizzes_grouped[ $quiz_id ];
+		$quiz      = $group['best'];
 		$quiz_post = get_post( $quiz_id );
 		$title     = $quiz_post ? $quiz_post->post_title : "\xE2\x80\x94";
 
@@ -252,21 +285,18 @@ function lde_render_report() {
 			$percentage = ( floatval( $quiz['score'] ) / floatval( $quiz['count'] ) ) * 100;
 		}
 
-		$pass_status = isset( $quiz['pass'] ) ? (bool) $quiz['pass'] : false;
+		$pass_status   = ! empty( $quiz['pass'] );
+		$attempt_count = $group['count'];
 
-		if ( $percentage > 0 ) {
-			$status_text  = $pass_status ? esc_html__( 'Passed', 'learndash-evidence' ) : esc_html__( 'Not passed', 'learndash-evidence' );
-			$status_style = $pass_status ? 'background:#4CAF50;color:#fff;' : 'background:#c0392b;color:#fff;';
+		if ( $pass_status ) {
+			$status_text  = esc_html__( 'Passed', 'learndash-evidence' );
+			$status_style = 'background:#4CAF50;color:#fff;';
+		} elseif ( $percentage > 0 ) {
+			$status_text  = esc_html__( 'Not passed', 'learndash-evidence' );
+			$status_style = 'background:#c0392b;color:#fff;';
 		} else {
 			$status_text  = esc_html__( 'Not taken', 'learndash-evidence' );
 			$status_style = 'background:#ccc;color:#333;';
-		}
-
-		$attempt_count = 0;
-		foreach ( $user_quizzes as $q ) {
-			if ( intval( $q['quiz'] ) === intval( $quiz_id ) && intval( $q['course'] ) === $course_id ) {
-				$attempt_count++;
-			}
 		}
 
 		$quiz_rows .= sprintf(

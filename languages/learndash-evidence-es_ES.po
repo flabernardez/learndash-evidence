@@ -1,3 +1,4 @@
+# Spanish (Spain) translation for LearnDash Evidence
 # Copyright (C) 2026 Flavia Bernardez Rodriguez
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
@@ -5,10 +6,10 @@ msgstr ""
 "Project-Id-Version: LearnDash Evidence 1.6.0\n"
 "Report-Msgid-Bugs-To: https://flabernardez.com\n"
 "POT-Creation-Date: 2026-02-19 12:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2026-02-19 12:00+0000\n"
 "Last-Translator: Flavia Bernardez Rodriguez <flavia@flabernardez.com>\n"
-"Language-Team: \n"
-"Language: \n"
+"Language-Team: Spanish (Spain)\n"
+"Language: es_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,187 +19,182 @@ msgstr ""
 
 #. Plugin Name of the plugin
 msgid "LearnDash Evidence"
-msgstr ""
+msgstr "LearnDash Evidencias"
 
 #. Description of the plugin
 msgid "Adds a tracking section in LearnDash to monitor user progress and quiz scores, prepared for screencapture or print."
-msgstr ""
+msgstr "Agrega una sección de seguimiento en LearnDash para monitorizar el progreso de los usuarios y las puntuaciones de los cuestionarios, preparada para captura de pantalla o impresión."
 
 #. Author of the plugin
 msgid "Flavia Bernardez Rodriguez"
-msgstr ""
+msgstr "Flavia Bernárdez Rodríguez"
 
 #. Author URI of the plugin
 msgid "https://flabernardez.com"
-msgstr ""
-
-#: includes/admin-menus.php:27 includes/admin-menus.php:28
-#: includes/profile.php:33
-msgid "LearnDash Evidence"
-msgstr ""
+msgstr "https://flabernardez.com"
 
 #: includes/admin-menus.php:37 includes/admin-menus.php:38
 msgid "Student Tracking"
-msgstr ""
+msgstr "Seguimiento de alumnos"
 
 #: includes/admin-menus.php:49 includes/admin-menus.php:50
 msgid "Fix Course Dates"
-msgstr ""
+msgstr "Corregir fechas de cursos"
 
 #: includes/autocomplete.php:114
 msgid "next topic"
-msgstr ""
+msgstr "siguiente tema"
 
 #: includes/autocomplete.php:115
 msgid "next lesson"
-msgstr ""
+msgstr "siguiente lección"
 
 #: includes/autocomplete.php:116
 msgid "next quiz"
-msgstr ""
+msgstr "siguiente cuestionario"
 
 #: includes/date-fix.php:25
 #, php-format
 msgid "Fixed %d course access dates."
-msgstr ""
+msgstr "Se han corregido %d fechas de acceso a cursos."
 
 #: includes/date-fix.php:29
 msgid "Fix Course Access Dates"
-msgstr ""
+msgstr "Corregir fechas de acceso a cursos"
 
 #: includes/date-fix.php:30
 msgid "This tool will fix course access dates that show as January 1, 1970, setting them to the user registration date instead."
-msgstr ""
+msgstr "Esta herramienta corregirá las fechas de acceso a cursos que aparecen como 1 de enero de 1970, estableciéndolas con la fecha de registro del usuario."
 
 #: includes/date-fix.php:34
 msgid "Users with incorrect dates:"
-msgstr ""
+msgstr "Usuarios con fechas incorrectas:"
 
 #: includes/date-fix.php:36
 msgid "User"
-msgstr ""
+msgstr "Usuario"
 
 #: includes/date-fix.php:36
 msgid "Registration Date"
-msgstr ""
+msgstr "Fecha de registro"
 
 #: includes/date-fix.php:36
 msgid "Affected Courses"
-msgstr ""
+msgstr "Cursos afectados"
 
 #: includes/date-fix.php:50
 msgid "Fix All Dates"
-msgstr ""
+msgstr "Corregir todas las fechas"
 
 #: includes/date-fix.php:53
 msgid "No users found with incorrect course access dates."
-msgstr ""
+msgstr "No se encontraron usuarios con fechas de acceso a cursos incorrectas."
 
 #: includes/report.php:292
 msgid "Passed"
-msgstr ""
+msgstr "Aprobado"
 
 #: includes/report.php:295
 msgid "Not passed"
-msgstr ""
+msgstr "No aprobado"
 
 #: includes/report.php:298
 msgid "Not taken"
-msgstr ""
+msgstr "Sin intentos"
 
 #: student-list.php:56
 msgid "Completed"
-msgstr ""
+msgstr "Completado"
 
 #: student-list.php:57
 msgid "Not completed"
-msgstr ""
+msgstr "No completado"
 
 #: student-list.php:114
 msgid "Student List in Courses"
-msgstr ""
+msgstr "Listado de alumnos en cursos"
 
 #: student-list.php:117
 msgid "Search user..."
-msgstr ""
+msgstr "Buscar usuario..."
 
 #: student-list.php:118
 msgid "Search"
-msgstr ""
+msgstr "Buscar"
 
 #: student-list.php:124
 msgid "Name"
-msgstr ""
+msgstr "Nombre"
 
 #: student-list.php:125
 msgid "Last Name"
-msgstr ""
+msgstr "Apellido"
 
 #: student-list.php:126
 msgid "Start Date"
-msgstr ""
+msgstr "Fecha de inicio"
 
 #: student-list.php:127
 msgid "Course"
-msgstr ""
+msgstr "Curso"
 
 #: student-list.php:128 templates/course-report.php:63
 msgid "Status"
-msgstr ""
+msgstr "Estado"
 
 #: student-list.php:129
 msgid "Report"
-msgstr ""
+msgstr "Informe"
 
 #: student-list.php:141
 msgid "View report"
-msgstr ""
+msgstr "Ver informe"
 
 #: student-list.php:145
 msgid "No students found."
-msgstr ""
+msgstr "No se encontraron alumnos."
 
 #: templates/course-report.php:3
 msgid "Print / Save PDF"
-msgstr ""
+msgstr "Imprimir / Guardar PDF"
 
 #: templates/course-report.php:11
 msgid "Course Content"
-msgstr ""
+msgstr "Contenido del curso"
 
 #: templates/course-report.php:22
 msgid "Progress"
-msgstr ""
+msgstr "Progreso"
 
 #: templates/course-report.php:26
 msgid "completed"
-msgstr ""
+msgstr "completado"
 
 #: templates/course-report.php:32
 #, php-format
 msgid "%1$d of %2$d steps (lessons, topics & quizzes)"
-msgstr ""
+msgstr "%1$d de %2$d pasos (lecciones, temas y cuestionarios)"
 
 #: templates/course-report.php:44
 msgid "Completed Evidences"
-msgstr ""
+msgstr "Evidencias completadas"
 
 #: templates/course-report.php:55
 msgid "Quizzes"
-msgstr ""
+msgstr "Cuestionarios"
 
 #: templates/course-report.php:60
 msgid "Title"
-msgstr ""
+msgstr "Título"
 
 #: templates/course-report.php:61
 msgid "Score"
-msgstr ""
+msgstr "Puntuación"
 
 #: templates/course-report.php:62
 msgid "Attempts"
-msgstr ""
+msgstr "Intentos"
 
 #: templates/course-report.php:75
 msgid "Back to user profile"
-msgstr ""
+msgstr "Volver al perfil del usuario"
