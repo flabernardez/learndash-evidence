@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: LearnDash Evidence 1.6.0\n"
+"Project-Id-Version: LearnDash Evidence 1.7.0\n"
 "Report-Msgid-Bugs-To: https://flabernardez.com\n"
 "POT-Creation-Date: 2026-02-19 12:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -197,6 +197,64 @@ msgstr ""
 
 #: templates/course-report.php:62
 msgid "Attempts"
+msgstr ""
+
+#: includes/admin-menus.php:59 includes/admin-menus.php:60
+msgid "LDE Diagnostic"
+msgstr ""
+
+#: includes/diagnostic.php:24
+msgid "Unauthorized access."
+msgstr ""
+
+#: includes/diagnostic.php:36
+msgid "LearnDash Evidence — Diagnostic"
+msgstr ""
+
+#: includes/diagnostic.php:37
+msgid "This diagnostic verifies that all LearnDash functions, hooks, and data structures used by this plugin are available and working correctly."
+msgstr ""
+
+#: includes/diagnostic.php:40
+msgid "Not detected"
+msgstr ""
+
+#: includes/diagnostic.php:48
+msgid "ALL TESTS PASSED"
+msgstr ""
+
+#: includes/diagnostic.php:49
+#, php-format
+msgid "%d / %d checks OK."
+msgstr ""
+
+#: includes/diagnostic.php:51
+msgid "SOME TESTS FAILED"
+msgstr ""
+
+#: includes/diagnostic.php:52
+#, php-format
+msgid "%1$d passed, %2$d failed out of %3$d checks."
+msgstr ""
+
+#: includes/diagnostic.php:59
+msgid "#"
+msgstr ""
+
+#: includes/diagnostic.php:60
+msgid "Result"
+msgstr ""
+
+#: includes/diagnostic.php:61
+msgid "Category"
+msgstr ""
+
+#: includes/diagnostic.php:62
+msgid "Test"
+msgstr ""
+
+#: includes/diagnostic.php:63
+msgid "Details"
 msgstr ""
 
 #: templates/course-report.php:75

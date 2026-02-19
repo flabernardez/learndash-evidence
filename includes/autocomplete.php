@@ -3,11 +3,15 @@
  * Auto-complete and checkbox gating for LearnDash Evidence.
  *
  * Automatically marks lessons and topics as complete when viewed,
- * hides the native "Mark Complete" button, and gates the "Next"
- * navigation button behind checkbox acknowledgement.
+ * hides the native "Mark Complete" / "Completed" status, and gates
+ * the "Next" navigation button behind checkbox acknowledgement.
+ *
+ * Compatible with LearnDash 4.x (LD30 Legacy) and 5.x (LD30 Modern / Breezy).
+ * In LD 5.0 Focus Mode, both Legacy and Modern navigation coexist on the page.
  *
  * @package learndash-evidence
  * @since   1.6.0
+ * @since   1.7.0 Updated for LD 5.0 Modern/Breezy theme compatibility.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -15,7 +19,12 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Hides the native LearnDash "Mark Complete" button for lessons and topics.
  *
+ * In LD 4.x this is sufficient. In LD 5.0 Modern theme, returning empty
+ * causes a disabled fallback button to render, so we also inject CSS
+ * via lde_frontend_css() to hide the entire progress wrapper.
+ *
  * @since 1.3.0
+ * @since 1.7.0 Added complementary CSS approach for LD 5.0 Modern theme.
  *
  * @param string $html The button HTML.
  * @param object $post The current post object.
@@ -33,6 +42,7 @@ add_filter( 'learndash_mark_complete', 'lde_remove_mark_complete_button', 10, 2 
  * Auto-completes a lesson or topic when a logged-in user views it.
  *
  * @since 1.3.0
+ * @since 1.7.0 Now passes $course_id explicitly for LD 5.0 compatibility.
  *
  * @return void
  */
@@ -51,11 +61,97 @@ function lde_autocomplete_on_view() {
 
 	if ( in_array( $post_type, array( 'sfwd-lessons', 'sfwd-topic' ), true ) ) {
 		if ( ! learndash_is_lesson_complete( $user_id, $post->ID ) ) {
-			learndash_process_mark_complete( $user_id, $post->ID );
+			$course_id = learndash_get_course_id( $post->ID );
+			learndash_process_mark_complete( $user_id, $post->ID, false, $course_id );
 		}
 	}
 }
 add_action( 'template_redirect', 'lde_autocomplete_on_view' );
+
+/**
+ * Injects CSS fixes for lessons and topics.
+ *
+ * Covers:
+ * - Hide Mark Complete button and "Completed" status (Legacy + Modern).
+ * - Checkbox alignment inside content areas (Normal + Focus Mode).
+ * - Focus Mode avatar overflow fix for Modern/Breezy theme.
+ *
+ * @since 1.7.0
+ *
+ * @return void
+ */
+function lde_frontend_css() {
+	if ( ! is_singular( array( 'sfwd-lessons', 'sfwd-topic' ) ) || ! is_user_logged_in() ) {
+		return;
+	}
+	?>
+	<style>
+		/* ==========================================================
+		   1. Hide Mark Complete / Completed status
+		   ========================================================== */
+
+		/* LD 4.x Legacy: hide mark complete form and button. */
+		.sfwd-mark-complete,
+		#learndash_mark_complete_button {
+			display: none !important;
+		}
+
+		/*
+		 * LD 5.0 Modern/Breezy: hide the entire progress wrapper.
+		 * This covers both the "mark-complete" button (disabled fallback)
+		 * and the "completed" status ("Tema Marked Complete").
+		 */
+		.ld-navigation__progress {
+			display: none !important;
+		}
+
+		/* ==========================================================
+		   2. Checkbox + label alignment in content areas
+		   ========================================================== */
+
+		/*
+		 * Target checkboxes inside all possible content containers:
+		 * - .ld-focus-content       (Focus Mode)
+		 * - .ld-tab-bar__panel      (Modern tabbed content)
+		 * - .ld-layout__content     (Modern layout)
+		 * - .learndash-wrapper      (General wrapper)
+		 */
+		.ld-focus-content input[type="checkbox"],
+		.ld-tab-bar__panel input[type="checkbox"],
+		.ld-layout__content input[type="checkbox"],
+		.learndash-wrapper input[type="checkbox"] {
+			margin-right: 8px;
+			margin-top: 3px;
+			flex-shrink: 0;
+		}
+
+		.ld-focus-content label,
+		.ld-tab-bar__panel label,
+		.ld-layout__content label,
+		.learndash-wrapper label {
+			display: flex;
+			align-items: flex-start;
+		}
+
+		/* ==========================================================
+		   3. Focus Mode avatar overflow fix
+		   ========================================================== */
+
+		/*
+		 * In LD 5.0 Modern mode, the CSS rule that constrains avatar images
+		 * to width:100% is excluded via :not(.learndash-wrapper--modern).
+		 * The avatar img renders at native size (96px) inside a 40px container.
+		 */
+		.ld-focus-header .ld-profile-avatar img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			border-radius: 50%;
+		}
+	</style>
+	<?php
+}
+add_action( 'wp_head', 'lde_frontend_css' );
 
 /**
  * Enqueues the checkbox gating script on lesson and topic pages.
@@ -70,21 +166,21 @@ function lde_enqueue_checkboxes_script() {
 	}
 
 	wp_enqueue_script( 'jquery' );
-	wp_enqueue_script(
-		'learndash-evidence-checkboxes',
-		'',
-		array( 'jquery' ),
-		null,
-		true
-	);
 	add_action( 'wp_print_footer_scripts', 'lde_inline_checkbox_script', 100 );
 }
 add_action( 'wp_enqueue_scripts', 'lde_enqueue_checkboxes_script' );
 
 /**
- * Outputs inline JS that disables the "Next" button until all checkboxes are checked.
+ * Outputs inline JS that disables ALL "Next" buttons until all checkboxes are checked.
+ *
+ * In LD 5.0 Focus Mode, both Legacy and Modern navigation coexist on the page:
+ * - Legacy:  .ld-content-actions .ld-button  (in the masthead)
+ * - Modern:  .ld-navigation__next-link       (in the content area)
+ *
+ * This script finds and disables ALL matching Next buttons simultaneously.
  *
  * @since 1.3.0
+ * @since 1.7.0 Updated to handle both navigation systems coexisting.
  *
  * @return void
  */
@@ -92,8 +188,42 @@ function lde_inline_checkbox_script() {
 	?>
 	<script>
 		jQuery(function($){
+			/**
+			 * Remove stray <br> tags adjacent to checkbox labels.
+			 * WordPress/Gutenberg wpautop inserts <br> between inline elements,
+			 * which breaks the flex layout of checkbox + label pairs.
+			 */
+			$(
+				'.ld-focus-content label, '
+				+ '.ld-tab-bar__panel label, '
+				+ '.ld-layout__content label, '
+				+ '.learndash-wrapper label'
+			).each(function(){
+				var label = $(this);
+				if (label.find('input[type="checkbox"]').length) {
+					label.parent('p').find('br').remove();
+				}
+			});
+
+			/**
+			 * Scopes checkbox detection to the LearnDash content area only,
+			 * avoiding interference with admin bars, widgets, or other plugins.
+			 */
+			function getContentCheckboxes() {
+				var container = $(
+					'.ld-focus-content, '
+					+ '.ld-tab-bar__panel, '
+					+ '.ld-layout__content, '
+					+ '.learndash-wrapper'
+				);
+				if (container.length) {
+					return container.find('input[type="checkbox"]');
+				}
+				return $('input[type="checkbox"]');
+			}
+
 			function checkCheckboxes() {
-				var checkboxes = $('input[type="checkbox"]');
+				var checkboxes = getContentCheckboxes();
 				if (checkboxes.length === 0) {
 					return true;
 				}
@@ -107,37 +237,69 @@ function lde_inline_checkbox_script() {
 				return allChecked;
 			}
 
-			function getNextButton() {
-				var btns = $('.ld-content-actions .ld-button');
-				var nextBtn = btns.filter(function(){
+			/**
+			 * Finds ALL "Next" navigation buttons on the page.
+			 * In Focus Mode both Legacy and Modern may be present simultaneously.
+			 * Returns a jQuery collection of all matching elements.
+			 */
+			function getAllNextButtons() {
+				var buttons = $();
+
+				/* LD 5.0 Modern / Breezy: <a class="ld-navigation__next-link"> */
+				buttons = buttons.add( $('.ld-navigation__next-link') );
+
+				/* LD 4.x Legacy: <a class="ld-button"> inside .ld-content-actions */
+				var legacy = $('.ld-content-actions .ld-button').filter(function(){
 					var txt = $(this).find('.ld-text').text().trim().toLowerCase();
 					return txt.includes('<?php echo esc_js( strtolower( esc_html__( 'next topic', 'learndash-evidence' ) ) ); ?>')
 						|| txt.includes('<?php echo esc_js( strtolower( esc_html__( 'next lesson', 'learndash-evidence' ) ) ); ?>')
 						|| txt.includes('<?php echo esc_js( strtolower( esc_html__( 'next quiz', 'learndash-evidence' ) ) ); ?>')
+						|| txt.includes('siguiente')
 						|| txt.includes('next');
 				});
-				return nextBtn.length ? nextBtn : $();
+				buttons = buttons.add( legacy );
+
+				return buttons;
 			}
 
-			function toggleNextButton() {
-				var nextBtn = getNextButton();
-				if (!nextBtn.length) return;
-				if (checkCheckboxes()) {
-					nextBtn.prop('disabled', false).removeClass('ld-disabled').css({
-						'pointer-events': '',
-						'opacity': ''
-					});
-				} else {
-					nextBtn.prop('disabled', true).addClass('ld-disabled').css({
-						'pointer-events': 'none',
-						'opacity': '0.5'
-					});
-				}
+			function toggleNextButtons() {
+				var buttons = getAllNextButtons();
+				if (!buttons.length) return;
+
+				buttons.each(function(){
+					var btn = $(this);
+
+					/* Store original href on first run so we can restore it. */
+					if (typeof btn.data('lde-href') === 'undefined' && btn.attr('href')) {
+						btn.data('lde-href', btn.attr('href'));
+					}
+
+					if (checkCheckboxes()) {
+						/* Re-enable: restore href and remove disabled styles. */
+						var savedHref = btn.data('lde-href');
+						if (savedHref) {
+							btn.attr('href', savedHref);
+						}
+						btn
+							.prop('disabled', false)
+							.attr('aria-disabled', 'false')
+							.removeClass('ld-disabled ld-navigation__next-link--disabled')
+							.css({ 'pointer-events': '', 'opacity': '' });
+					} else {
+						/* Disable: remove href and apply disabled styles. */
+						btn
+							.removeAttr('href')
+							.prop('disabled', true)
+							.attr('aria-disabled', 'true')
+							.addClass('ld-disabled ld-navigation__next-link--disabled')
+							.css({ 'pointer-events': 'none', 'opacity': '0.5' });
+					}
+				});
 			}
 
-			toggleNextButton();
+			toggleNextButtons();
 			$(document).on('change', 'input[type="checkbox"]', function(){
-				toggleNextButton();
+				toggleNextButtons();
 			});
 		});
 	</script>

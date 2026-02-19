@@ -3,7 +3,7 @@
  * Plugin Name: LearnDash Evidence
  * Plugin URI:  https://flabernardez.com/learndash-evidence
  * Description: Adds a tracking section in LearnDash to monitor user progress and quiz scores, prepared for screencapture or print.
- * Version:     1.6.0
+ * Version:     1.7.0
  * Author:      Flavia Bernardez Rodriguez
  * Author URI:  https://flabernardez.com
  * License:     GPL-2.0-or-later
@@ -24,7 +24,7 @@ define( 'LDE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
  *
  * @since 1.6.0
  */
-define( 'LDE_VERSION', '1.6.0' );
+define( 'LDE_VERSION', '1.7.0' );
 
 // Enable excerpt support for LearnDash Topics.
 add_action( 'init', function () {
@@ -38,3 +38,4 @@ require_once LDE_PLUGIN_DIR . 'includes/report.php';
 require_once LDE_PLUGIN_DIR . 'includes/autocomplete.php';
 require_once LDE_PLUGIN_DIR . 'includes/date-fix.php';
 require_once LDE_PLUGIN_DIR . 'includes/profile.php';
+require_once LDE_PLUGIN_DIR . 'includes/diagnostic.php';

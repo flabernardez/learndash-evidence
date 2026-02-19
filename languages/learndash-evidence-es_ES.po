@@ -3,7 +3,7 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: LearnDash Evidence 1.6.0\n"
+"Project-Id-Version: LearnDash Evidence 1.7.0\n"
 "Report-Msgid-Bugs-To: https://flabernardez.com\n"
 "POT-Creation-Date: 2026-02-19 12:00+0000\n"
 "PO-Revision-Date: 2026-02-19 12:00+0000\n"
@@ -194,6 +194,64 @@ msgstr "Puntuación"
 #: templates/course-report.php:62
 msgid "Attempts"
 msgstr "Intentos"
+
+#: includes/admin-menus.php:59 includes/admin-menus.php:60
+msgid "LDE Diagnostic"
+msgstr "LDE Diagnóstico"
+
+#: includes/diagnostic.php:24
+msgid "Unauthorized access."
+msgstr "Acceso no autorizado."
+
+#: includes/diagnostic.php:36
+msgid "LearnDash Evidence — Diagnostic"
+msgstr "LearnDash Evidence — Diagnóstico"
+
+#: includes/diagnostic.php:37
+msgid "This diagnostic verifies that all LearnDash functions, hooks, and data structures used by this plugin are available and working correctly."
+msgstr "Este diagnóstico verifica que todas las funciones, hooks y estructuras de datos de LearnDash utilizadas por este plugin están disponibles y funcionan correctamente."
+
+#: includes/diagnostic.php:40
+msgid "Not detected"
+msgstr "No detectado"
+
+#: includes/diagnostic.php:48
+msgid "ALL TESTS PASSED"
+msgstr "TODAS LAS PRUEBAS SUPERADAS"
+
+#: includes/diagnostic.php:49
+#, php-format
+msgid "%d / %d checks OK."
+msgstr "%d / %d comprobaciones OK."
+
+#: includes/diagnostic.php:51
+msgid "SOME TESTS FAILED"
+msgstr "ALGUNAS PRUEBAS FALLARON"
+
+#: includes/diagnostic.php:52
+#, php-format
+msgid "%1$d passed, %2$d failed out of %3$d checks."
+msgstr "%1$d superadas, %2$d fallidas de %3$d comprobaciones."
+
+#: includes/diagnostic.php:59
+msgid "#"
+msgstr "#"
+
+#: includes/diagnostic.php:60
+msgid "Result"
+msgstr "Resultado"
+
+#: includes/diagnostic.php:61
+msgid "Category"
+msgstr "Categoría"
+
+#: includes/diagnostic.php:62
+msgid "Test"
+msgstr "Prueba"
+
+#: includes/diagnostic.php:63
+msgid "Details"
+msgstr "Detalles"
 
 #: templates/course-report.php:75
 msgid "Back to user profile"

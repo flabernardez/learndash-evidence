@@ -52,6 +52,16 @@ function lde_register_submenus() {
 		'fix-course-dates',
 		'lde_fix_dates_page'
 	);
+
+	// Diagnostic page for LD compatibility checks.
+	add_submenu_page(
+		'learndash-lms',
+		esc_html__( 'LDE Diagnostic', 'learndash-evidence' ),
+		esc_html__( 'LDE Diagnostic', 'learndash-evidence' ),
+		'manage_options',
+		'lde-diagnostic',
+		'lde_diagnostic_page'
+	);
 }
 
 /**
