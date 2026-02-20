@@ -205,19 +205,37 @@ function lde_render_report() {
 	) );
 
 	// Prepare evidence lines from excerpt.
+	// Uses individual checkbox state stored via AJAX when available,
+	// falls back to topic-level completion for backward compatibility.
 	$evidences = array();
 	foreach ( $evidence_topics as $topic ) {
 		$excerpt = wp_strip_all_tags( get_the_excerpt( $topic ) );
 		$lines   = preg_split( '/\r\n|\r|\n/', $excerpt );
+		$lines   = array_values( array_filter( array_map( 'trim', $lines ) ) );
 
-		$is_completed = learndash_is_topic_complete( $user_id, $topic->ID );
+		if ( empty( $lines ) ) {
+			continue;
+		}
 
-		foreach ( $lines as $line ) {
-			$line = trim( $line );
-			if ( $line && ! in_array( $topic->ID . $line, $evidences, true ) ) {
-				$icon        = $is_completed ? "\xE2\x9C\x85" : "\xE2\x9D\x8C";
-				$evidences[] = $icon . ' ' . $line;
+		$is_completed     = learndash_is_topic_complete( $user_id, $topic->ID );
+		$saved_checkboxes = lde_get_saved_checkboxes( $user_id, $topic->ID );
+		$has_saved_state  = ! empty( $saved_checkboxes );
+
+		foreach ( $lines as $index => $line ) {
+			if ( empty( $line ) ) {
+				continue;
 			}
+
+			if ( $has_saved_state ) {
+				// Individual checkbox state available: use it.
+				$is_checked = in_array( $index, $saved_checkboxes, true );
+			} else {
+				// No individual state: fall back to topic completion.
+				$is_checked = $is_completed;
+			}
+
+			$icon        = $is_checked ? "\xE2\x9C\x85" : "\xE2\x9D\x8C";
+			$evidences[] = $icon . ' ' . $line;
 		}
 	}
 

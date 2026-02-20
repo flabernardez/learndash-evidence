@@ -81,7 +81,7 @@ add_action( 'template_redirect', 'lde_autocomplete_on_view' );
  * @return void
  */
 function lde_frontend_css() {
-	if ( ! is_singular( array( 'sfwd-lessons', 'sfwd-topic' ) ) || ! is_user_logged_in() ) {
+	if ( ! is_singular( array( 'sfwd-lessons', 'sfwd-topic', 'sfwd-quiz' ) ) || ! is_user_logged_in() ) {
 		return;
 	}
 	?>
@@ -200,7 +200,10 @@ add_action( 'wp_head', 'lde_frontend_css' );
 /**
  * Enqueues the checkbox gating script on lesson and topic pages.
  *
+ * Also localizes AJAX variables for persistent checkbox state.
+ *
  * @since 1.3.0
+ * @since 1.8.0 Added AJAX localization for checkbox persistence.
  *
  * @return void
  */
@@ -229,9 +232,16 @@ add_action( 'wp_enqueue_scripts', 'lde_enqueue_checkboxes_script' );
  * @return void
  */
 function lde_inline_checkbox_script() {
+	global $post;
+	$post_id = ( $post ) ? $post->ID : 0;
+	$nonce   = wp_create_nonce( 'lde_checkboxes' );
 	?>
 	<script>
 		jQuery(function($){
+			var ldePostId = <?php echo absint( $post_id ); ?>;
+			var ldeNonce  = '<?php echo esc_js( $nonce ); ?>';
+			var ldeAjax   = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+
 			/**
 			 * Remove stray <br> tags adjacent to checkbox labels.
 			 * WordPress/Gutenberg wpautop inserts <br> between inline elements,
@@ -341,9 +351,60 @@ function lde_inline_checkbox_script() {
 				});
 			}
 
+			/**
+			 * Saves the current checkbox state to the server via AJAX.
+			 */
+			function saveCheckboxState() {
+				if ( ! ldePostId ) return;
+
+				var checkboxes = getContentCheckboxes();
+				var checked = [];
+
+				checkboxes.each(function( index ) {
+					if ( $(this).is(':checked') ) {
+						checked.push( index );
+					}
+				});
+
+				$.post( ldeAjax, {
+					action:  'lde_save_checkboxes',
+					nonce:   ldeNonce,
+					post_id: ldePostId,
+					checked: JSON.stringify( checked )
+				});
+			}
+
+			/**
+			 * Loads saved checkbox state from the server and restores it.
+			 */
+			function loadCheckboxState() {
+				if ( ! ldePostId ) return;
+
+				$.post( ldeAjax, {
+					action:  'lde_load_checkboxes',
+					nonce:   ldeNonce,
+					post_id: ldePostId
+				}, function( response ) {
+					if ( response.success && response.data.checked.length ) {
+						var checkboxes = getContentCheckboxes();
+						$.each( response.data.checked, function( _, idx ) {
+							if ( checkboxes[ idx ] ) {
+								$( checkboxes[ idx ] ).prop( 'checked', true );
+							}
+						});
+						toggleNextButtons();
+					}
+				});
+			}
+
+			/* Initial load: restore saved state, then apply button gating. */
+			loadCheckboxState();
 			toggleNextButtons();
+
+			/* On every checkbox change: save state and update buttons. */
 			$(document).on('change', 'input[type="checkbox"]', function(){
 				toggleNextButtons();
+				saveCheckboxState();
 			});
 		});
 	</script>
