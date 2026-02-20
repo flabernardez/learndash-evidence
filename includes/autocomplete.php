@@ -134,7 +134,51 @@ function lde_frontend_css() {
 		}
 
 		/* ==========================================================
-		   3. Focus Mode avatar overflow fix
+		   3. Sidebar: disable links on incomplete lessons and topics
+		   ========================================================== */
+
+		/*
+		 * Prevents students from navigating to lessons or topics they
+		 * haven't reached yet. Only affects Focus Mode sidebar.
+		 * The current lesson/topic remains clickable via specificity override.
+		 */
+
+		/* Disable lesson links for incomplete lessons. */
+		.ld-lesson-item.learndash-incomplete:not(.ld-is-current-lesson)
+			> .ld-lesson-item-preview
+			> a.ld-lesson-item-preview-heading {
+			pointer-events: none;
+			opacity: 0.45;
+			cursor: default;
+		}
+
+		/* Disable topic links for incomplete topics. */
+		.ld-table-list-item.learndash-incomplete
+			> a.ld-table-list-item-preview:not(.ld-is-current-item) {
+			pointer-events: none;
+			opacity: 0.45;
+			cursor: default;
+		}
+
+		/* Disable quiz links for incomplete quizzes. */
+		.ld-table-list-item.learndash-incomplete
+			> .ld-table-list-item-wrapper
+			> a.ld-table-list-item-preview {
+			pointer-events: none;
+			opacity: 0.45;
+			cursor: default;
+		}
+
+		/* Keep the currently active topic fully visible and clickable. */
+		.ld-table-list-item.learndash-incomplete
+			> a.ld-table-list-item-preview.ld-is-current-item {
+			pointer-events: auto;
+			opacity: 1;
+			cursor: pointer;
+		}
+
+		/* ==========================================================
+		   4. Focus Mode avatar overflow fix
 		   ========================================================== */
 
 		/*
