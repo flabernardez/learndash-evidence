@@ -157,6 +157,56 @@ function lde_calculate_real_progress( $user_id, $course_id, $user_quizzes ) {
 }
 
 /**
+ * Retrieves all topic IDs for a course, including shared steps.
+ *
+ * Uses the `ld_course_steps` post meta to extract topic IDs from the
+ * course builder structure. This works with both regular courses and
+ * courses that use LearnDash shared course steps.
+ *
+ * @since 1.8.0
+ *
+ * @param int $course_id The course ID.
+ * @return int[] Array of topic post IDs.
+ */
+function lde_get_course_topic_ids( $course_id ) {
+	$topic_ids = array();
+
+	$steps_raw = get_post_meta( $course_id, 'ld_course_steps', true );
+
+	if ( ! empty( $steps_raw ) && is_array( $steps_raw ) && isset( $steps_raw['steps']['h']['sfwd-lessons'] ) ) {
+		$lessons = $steps_raw['steps']['h']['sfwd-lessons'];
+
+		foreach ( $lessons as $lesson_id => $lesson_data ) {
+			if ( isset( $lesson_data['sfwd-topic'] ) && is_array( $lesson_data['sfwd-topic'] ) ) {
+				foreach ( $lesson_data['sfwd-topic'] as $topic_id => $topic_data ) {
+					$topic_ids[] = absint( $topic_id );
+				}
+			}
+		}
+	}
+
+	// Fallback: if ld_course_steps is empty or missing, use the meta query approach.
+	if ( empty( $topic_ids ) ) {
+		$fallback = get_posts( array(
+			'post_type'      => 'sfwd-topic',
+			'meta_query'     => array(
+				array(
+					'key'     => 'course_id',
+					'value'   => $course_id,
+					'compare' => '=',
+				),
+			),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		) );
+
+		$topic_ids = array_map( 'absint', $fallback );
+	}
+
+	return $topic_ids;
+}
+
+/**
  * Renders the full evidence report for a user/course combination.
  *
  * Collects lessons, progress (with quizzes), evidence items, and quiz
@@ -185,57 +235,44 @@ function lde_render_report() {
 	$progress_percent = $real_progress['percent'];
 
 	// Get all topics in course with "evidencia" tag.
-	$evidence_topics = get_posts( array(
-		'post_type'      => 'sfwd-topic',
-		'tax_query'      => array(
-			array(
-				'taxonomy' => 'ld_topic_tag',
-				'field'    => 'slug',
-				'terms'    => 'evidencia',
+	// Supports shared course steps: instead of filtering by course_id meta,
+	// we collect all topic IDs from the course structure first, then filter
+	// by the "evidencia" tag taxonomy.
+	$all_topic_ids   = lde_get_course_topic_ids( $course_id );
+	$evidence_topics = array();
+
+	if ( ! empty( $all_topic_ids ) ) {
+		$evidence_topics = get_posts( array(
+			'post_type'      => 'sfwd-topic',
+			'post__in'       => $all_topic_ids,
+			'tax_query'      => array(
+				array(
+					'taxonomy' => 'ld_topic_tag',
+					'field'    => 'slug',
+					'terms'    => 'evidencia',
+				),
 			),
-		),
-		'meta_query'     => array(
-			array(
-				'key'     => 'course_id',
-				'value'   => $course_id,
-				'compare' => '=',
-			),
-		),
-		'posts_per_page' => -1,
-	) );
+			'posts_per_page' => -1,
+			'orderby'        => 'post__in',
+		) );
+	}
 
 	// Prepare evidence lines from excerpt.
-	// Uses individual checkbox state stored via AJAX when available,
-	// falls back to topic-level completion for backward compatibility.
+	// Each line in the excerpt is a separate evidence item.
+	// Completion is based on whether the topic is completed for the user.
 	$evidences = array();
 	foreach ( $evidence_topics as $topic ) {
 		$excerpt = wp_strip_all_tags( get_the_excerpt( $topic ) );
 		$lines   = preg_split( '/\r\n|\r|\n/', $excerpt );
-		$lines   = array_values( array_filter( array_map( 'trim', $lines ) ) );
 
-		if ( empty( $lines ) ) {
-			continue;
-		}
+		$is_completed = learndash_is_topic_complete( $user_id, $topic->ID );
 
-		$is_completed     = learndash_is_topic_complete( $user_id, $topic->ID );
-		$saved_checkboxes = lde_get_saved_checkboxes( $user_id, $topic->ID );
-		$has_saved_state  = ! empty( $saved_checkboxes );
-
-		foreach ( $lines as $index => $line ) {
-			if ( empty( $line ) ) {
-				continue;
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( ! empty( $line ) ) {
+				$icon        = $is_completed ? "\xE2\x9C\x85" : "\xE2\x9D\x8C";
+				$evidences[] = $icon . ' ' . $line;
 			}
-
-			if ( $has_saved_state ) {
-				// Individual checkbox state available: use it.
-				$is_checked = in_array( $index, $saved_checkboxes, true );
-			} else {
-				// No individual state: fall back to topic completion.
-				$is_checked = $is_completed;
-			}
-
-			$icon        = $is_checked ? "\xE2\x9C\x85" : "\xE2\x9D\x8C";
-			$evidences[] = $icon . ' ' . $line;
 		}
 	}
 

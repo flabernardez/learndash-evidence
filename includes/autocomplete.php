@@ -41,8 +41,13 @@ add_filter( 'learndash_mark_complete', 'lde_remove_mark_complete_button', 10, 2 
 /**
  * Auto-completes a lesson or topic when a logged-in user views it.
  *
+ * Skips auto-completion if the content contains checkboxes, because
+ * in that case the topic should only complete when all checkboxes
+ * are checked (handled via AJAX in lde_ajax_mark_complete).
+ *
  * @since 1.3.0
  * @since 1.7.0 Now passes $course_id explicitly for LD 5.0 compatibility.
+ * @since 1.8.0 Skips auto-complete for posts with checkboxes.
  *
  * @return void
  */
@@ -60,13 +65,36 @@ function lde_autocomplete_on_view() {
 	$post_type = get_post_type( $post );
 
 	if ( in_array( $post_type, array( 'sfwd-lessons', 'sfwd-topic' ), true ) ) {
-		if ( ! learndash_is_lesson_complete( $user_id, $post->ID ) ) {
-			$course_id = learndash_get_course_id( $post->ID );
-			learndash_process_mark_complete( $user_id, $post->ID, false, $course_id );
+		// Skip if already completed.
+		if ( learndash_is_lesson_complete( $user_id, $post->ID ) ) {
+			return;
 		}
+
+		// Skip auto-complete if the content has checkboxes.
+		// The topic will be completed via AJAX when all checkboxes are checked.
+		if ( lde_post_has_checkboxes( $post->ID ) ) {
+			return;
+		}
+
+		$course_id = learndash_get_course_id( $post->ID );
+		learndash_process_mark_complete( $user_id, $post->ID, false, $course_id );
 	}
 }
 add_action( 'template_redirect', 'lde_autocomplete_on_view' );
+
+/**
+ * Checks whether a post's content contains HTML checkboxes.
+ *
+ * @since 1.8.0
+ *
+ * @param int $post_id The post ID.
+ * @return bool True if the content has at least one checkbox input.
+ */
+function lde_post_has_checkboxes( $post_id ) {
+	$content = get_post_field( 'post_content', $post_id );
+
+	return ( false !== strpos( $content, 'type="checkbox"' ) );
+}
 
 /**
  * Injects CSS fixes for lessons and topics.
@@ -352,7 +380,14 @@ function lde_inline_checkbox_script() {
 			}
 
 			/**
+			 * Tracks whether mark_complete has already been fired
+			 * to avoid duplicate AJAX calls.
+			 */
+			var ldeAlreadyCompleted = false;
+
+			/**
 			 * Saves the current checkbox state to the server via AJAX.
+			 * When all checkboxes are checked, also marks the topic as complete.
 			 */
 			function saveCheckboxState() {
 				if ( ! ldePostId ) return;
@@ -372,10 +407,22 @@ function lde_inline_checkbox_script() {
 					post_id: ldePostId,
 					checked: JSON.stringify( checked )
 				});
+
+				/* When ALL checkboxes are checked, mark the topic as complete. */
+				if ( checkboxes.length > 0 && checked.length === checkboxes.length && ! ldeAlreadyCompleted ) {
+					ldeAlreadyCompleted = true;
+					$.post( ldeAjax, {
+						action:  'lde_mark_complete',
+						nonce:   ldeNonce,
+						post_id: ldePostId
+					});
+				}
 			}
 
 			/**
 			 * Loads saved checkbox state from the server and restores it.
+			 * If all checkboxes were already checked, sets ldeAlreadyCompleted
+			 * to avoid firing mark_complete again.
 			 */
 			function loadCheckboxState() {
 				if ( ! ldePostId ) return;
@@ -392,6 +439,12 @@ function lde_inline_checkbox_script() {
 								$( checkboxes[ idx ] ).prop( 'checked', true );
 							}
 						});
+
+						/* If all were already checked, mark as already completed. */
+						if ( checkCheckboxes() ) {
+							ldeAlreadyCompleted = true;
+						}
+
 						toggleNextButtons();
 					}
 				});
