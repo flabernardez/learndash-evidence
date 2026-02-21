@@ -265,7 +265,7 @@ function lde_render_report() {
 		$excerpt = wp_strip_all_tags( get_the_excerpt( $topic ) );
 		$lines   = preg_split( '/\r\n|\r|\n/', $excerpt );
 
-		$is_completed = learndash_is_topic_complete( $user_id, $topic->ID );
+		$is_completed = learndash_is_topic_complete( $user_id, $topic->ID, $course_id );
 
 		foreach ( $lines as $line ) {
 			$line = trim( $line );
